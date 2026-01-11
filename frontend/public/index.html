@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人财务记账App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边导航栏 -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">功能菜单</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <a href="#add-record" class="nav-link" data-tab="add-record">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>添加新纪录</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#view-records" class="nav-link" data-tab="view-records">
+                        <i class="fas fa-list"></i>
+                        <span>查看所有记录</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#statistics" class="nav-link" data-tab="statistics">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>统计分析</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#settings" class="nav-link" data-tab="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>设置</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 添加新纪录标签页 -->
+            <div class="tab-content active" id="add-record">
+                <header>
+                    <h1 class="app-title">个人财务记账App</h1>
+                    <p class="app-subtitle">轻松记录每一笔收支，掌握您的财务状况</p>
+                </header>
+                
+                <div class="main-content-inner">
+                    <!-- 主表单卡片 -->
+                    <div class="form-card">
+                        <h2 class="form-title">
+                            <i class="fas fa-plus-circle"></i>
+                            添加新记录
+                        </h2>
+                
+                <form class="transaction-form" id="transactionForm">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label class="form-label required" for="date">
+                                <i class="far fa-calendar-alt"></i>
+                                日期
+                            </label>
+                            <input type="date" id="date" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-field">
+                            <label class="form-label required" for="amount">
+                                <i class="fas fa-money-bill-wave"></i>
+                                金额
+                            </label>
+                            <div class="amount-container">
+                                <span class="currency-symbol" id="currencySymbol">¥</span>
+                                <input 
+                                    type="number" 
+                                    id="amount" 
+                                    class="form-input amount-input" 
+                                    placeholder="0.0000" 
+                                    step="0.0001" 
+                                    min="0" 
+                                    max="99999999.9999"
+                                    required
+                                    oninput="validateAmount(this)"
+                                >
+                            </div>
+                            <div class="input-hint" id="amountHint">
+                                最多支持四位小数
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label class="form-label required" for="currency">
+                                <i class="fas fa-globe"></i>
+                                货币
+                            </label>
+                            <select id="currency" class="form-select" required>
+                                <option value="">请选择货币</option>
+                                <option value="CNY" selected>人民币 (CNY)</option>
+                                <option value="USD">美元 (USD)</option>
+                                <option value="HKD">港币 (HKD)</option>
+                                <option value="EUR">欧元 (EUR)</option>
+                                <option value="JPY">日元 (JPY)</option>
+                                <option value="GBP">英镑 (GBP)</option>
+                                <option value="AUD">澳元 (AUD)</option>
+                                <option value="CAD">加元 (CAD)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-field">
+                            <label class="form-label required" for="type">
+                                <i class="fas fa-tag"></i>
+                                类型
+                            </label>
+                            <select id="type" class="form-select" required>
+                                <option value="">请选择类型</option>
+                                <optgroup label="支出">
+                                    <option value="餐饮">餐饮</option>
+                                    <option value="交通">交通</option>
+                                    <option value="杂货">杂货</option>
+                                    <option value="软件">软件</option>
+                                    <option value="住房">住房</option>
+                                    <option value="娱乐">娱乐</option>
+                                    <option value="医疗">医疗</option>
+                                    <option value="教育">教育</option>
+                                    <option value="购物">购物</option>
+                                    <option value="其他支出">其他支出</option>
+                                </optgroup>
+                                <optgroup label="收入">
+                                    <option value="工资">工资</option>
+                                    <option value="奖金">奖金</option>
+                                    <option value="投资">投资</option>
+                                    <option value="兼职">兼职</option>
+                                    <option value="其他收入">其他收入</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-field">
+                        <label class="form-label" for="note">
+                            <i class="far fa-sticky-note"></i>
+                            备注
+                        </label>
+                        <textarea 
+                            id="note" 
+                            class="form-textarea" 
+                            placeholder="可在此添加交易备注信息（可选）"
+                            maxlength="500"
+                        ></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span>/500
+                        </div>
+                    </div>
+                    
+                    <div id="formStatus" class="status-message"></div>
+                    
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i>
+                            重置表单
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle"></i>
+                            确认添加
+                        </button>
+                    </div>
+                </form>
+                    </div>
+                    
+                    <!-- 预览区域 -->
+                    <div class="preview-section">
+                        <h3 class="preview-title">
+                            <i class="fas fa-history"></i>
+                            最近记录
+                        </h3>
+                        <div class="preview-placeholder">
+                            <i class="fas fa-receipt fa-3x" id="placeholder-icon"></i>
+                            <p>暂无交易记录</p>
+                            <p class="placeholder-hint">添加的交易记录将显示在此处</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 查看所有记录标签页 -->
+            <div class="tab-content" id="view-records">
+                <header>
+                    <h1 class="app-title">查看所有记录</h1>
+                    <p class="app-subtitle">浏览和管理您的所有财务记录</p>
+                </header>
+                <div class="form-card">
+                    <h2 class="form-title">
+                        <i class="fas fa-list"></i>
+                        交易记录列表
+                    </h2>
+                    <div class="records-placeholder">
+                        <i class="fas fa-receipt fa-3x"></i>
+                        <p>暂无交易记录</p>
+                        <p class="placeholder-hint">添加的交易记录将显示在此处</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 统计分析标签页 -->
+            <div class="tab-content" id="statistics">
+                <header>
+                    <h1 class="app-title">统计分析</h1>
+                    <p class="app-subtitle">查看您的财务统计和趋势分析</p>
+                </header>
+                <div class="form-card">
+                    <h2 class="form-title">
+                        <i class="fas fa-chart-pie"></i>
+                        财务统计
+                    </h2>
+                    <div class="statistics-placeholder">
+                        <i class="fas fa-chart-bar fa-3x"></i>
+                        <p>暂无统计数据</p>
+                        <p class="placeholder-hint">添加交易记录后可查看统计信息</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 设置标签页 -->
+            <div class="tab-content" id="settings">
+                <header>
+                    <h1 class="app-title">设置</h1>
+                    <p class="app-subtitle">管理您的应用偏好设置</p>
+                </header>
+                <div class="form-card">
+                    <h2 class="form-title">
+                        <i class="fas fa-cog"></i>
+                        应用设置
+                    </h2>
+                    <div class="settings-placeholder">
+                        <i class="fas fa-tools fa-3x"></i>
+                        <p>设置功能开发中</p>
+                        <p class="placeholder-hint">敬请期待更多设置选项</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>© 2026 个人财务记账App | Personal Bookkeeping App | All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 标签页切换功能
+            const navLinks = document.querySelectorAll('.nav-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除所有活动状态
+                    navLinks.forEach(nav => nav.parentElement.classList.remove('active'));
+                    tabContents.forEach(tab => tab.classList.remove('active'));
+                    
+                    // 添加当前活动状态
+                    this.parentElement.classList.add('active');
+                    const targetTab = this.getAttribute('data-tab');
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+            
+            // 设置默认日期为今天
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('date').value = formattedDate;
+            document.getElementById('date').min = '2000-01-01';
+            document.getElementById('date').max = '2100-12-31';
+            
+            // 货币选择变化时更新货币符号
+            const currencySelect = document.getElementById('currency');
+            const currencySymbol = document.getElementById('currencySymbol');
+            
+            currencySelect.addEventListener('change', function() {
+                updateCurrencySymbol();
+            });
+            
+            // 初始化货币符号
+            updateCurrencySymbol();
+            
+            // 备注字数统计
+            const noteTextarea = document.getElementById('note');
+            const charCount = document.getElementById('charCount');
+            
+            noteTextarea.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+            
+            // 表单提交处理
+            const transactionForm = document.getElementById('transactionForm');
+            const formStatus = document.getElementById('formStatus');
+            
+            transactionForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // 获取表单数据
+                const formData = {
+                    date: document.getElementById('date').value,
+                    amount: parseFloat(document.getElementById('amount').value),
+                    currency: document.getElementById('currency').value,
+                    type: document.getElementById('type').value,
+                    note: document.getElementById('note').value
+                };
+                
+                // 验证表单
+                if (!formData.date) {
+                    showFormStatus('请选择日期', 'error');
+                    return;
+                }
+                
+                if (!formData.amount || formData.amount <= 0) {
+                    showFormStatus('请输入有效的金额（大于0）', 'error');
+                    return;
+                }
+                
+                if (!formData.currency) {
+                    showFormStatus('请选择货币', 'error');
+                    return;
+                }
+                
+                if (!formData.type) {
+                    showFormStatus('请选择类型', 'error');
+                    return;
+                }
+                
+                // 模拟表单提交成功
+                showFormStatus('交易记录添加成功！', 'success');
+                
+                // 模拟添加到预览区域
+                addToPreview(formData);
+                
+                // 3秒后重置表单
+                setTimeout(() => {
+                    transactionForm.reset();
+                    formStatus.className = 'status-message';
+                    formStatus.textContent = '';
+                    
+                    // 重置日期为今天
+                    document.getElementById('date').value = formattedDate;
+                    
+                    // 重置货币符号
+                    updateCurrencySymbol();
+                    
+                    // 重置字数统计
+                    charCount.textContent = 0;
+                }, 3000);
+            });
+            
+            // 表单重置处理
+            transactionForm.addEventListener('reset', function() {
+                formStatus.className = 'status-message';
+                formStatus.textContent = '';
+                
+                // 重置日期为今天
+                document.getElementById('date').value = formattedDate;
+                
+                // 重置货币符号
+                updateCurrencySymbol();
+                
+                // 重置字数统计
+                charCount.textContent = 0;
+            });
+        });
+        
+        // 更新货币符号
+        function updateCurrencySymbol() {
+            const currencySelect = document.getElementById('currency');
+            const currencySymbol = document.getElementById('currencySymbol');
+            const selectedCurrency = currencySelect.value;
+            
+            const currencySymbols = {
+                'CNY': '¥',
+                'USD': '$',
+                'HKD': 'HK$',
+                'EUR': '€',
+                'JPY': '¥',
+                'GBP': '£',
+                'AUD': 'A$',
+                'CAD': 'C$'
+            };
+            
+            currencySymbol.textContent = currencySymbols[selectedCurrency] || '¥';
+        }
+        
+        // 显示表单状态消息
+        function showFormStatus(message, type) {
+            const formStatus = document.getElementById('formStatus');
+            formStatus.textContent = message;
+            formStatus.className = `status-message ${type}`;
+            
+            // 滚动到状态消息
+            formStatus.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // 模拟添加到预览区域
+        function addToPreview(transactionData) {
+            console.log('交易数据已保存:', transactionData);
+            // 在实际应用中，这里会将数据发送到后端保存
+            // 并更新预览区域显示最新的交易记录
+        }
+        
+        // 金额验证函数
+        function validateAmount(input) {
+            const value = input.value;
+            const amountHint = document.getElementById('amountHint');
+            
+            // 检查是否为有效数字
+            if (isNaN(value) || value === '') {
+                input.classList.add('invalid');
+                amountHint.textContent = '请输入有效的金额';
+                amountHint.style.color = '#d93025';
+                return;
+            }
+            
+            // 检查小数位数
+            const decimalIndex = value.indexOf('.');
+            if (decimalIndex !== -1) {
+                const decimalPlaces = value.length - decimalIndex - 1;
+                if (decimalPlaces > 4) {
+                    input.classList.add('invalid');
+                    amountHint.textContent = '小数位数不能超过4位';
+                    amountHint.style.color = '#d93025';
+                } else {
+                    input.classList.remove('invalid');
+                    amountHint.textContent = '最多支持四位小数';
+                    amountHint.style.color = '#5f6368';
+                }
+            } else {
+                input.classList.remove('invalid');
+                amountHint.textContent = '最多支持四位小数';
+                amountHint.style.color = '#5f6368';
+            }
+            
+            // 检查是否为负数
+            if (parseFloat(value) < 0) {
+                input.classList.add('invalid');
+                amountHint.textContent = '金额不能为负数';
+                amountHint.style.color = '#d93025';
+            }
+        }
+    </script>
+</body>
+</html>

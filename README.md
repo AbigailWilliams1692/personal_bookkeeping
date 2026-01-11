@@ -1,2 +1,2 @@
 # personal_bookkeeping
-A personal bookkeeping web application 
+This project provides a solution for a personal bookkeeping web application.
