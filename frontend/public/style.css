@@ -257,11 +257,6 @@ header {
     box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
 }
 
-.form-input.invalid {
-    border-color: #d93025;
-    box-shadow: 0 0 0 2px rgba(217, 48, 37, 0.2);
-}
-
 .form-input:hover, .form-select:hover, .form-textarea:hover {
     border-color: #80868b;
 }

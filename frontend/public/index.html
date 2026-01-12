@@ -6,6 +6,8 @@
     <title>个人财务记账App</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../src/style/style.css">
+    <!-- 导入public文件夹下的style.css -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -103,14 +105,6 @@
                             </label>
                             <select id="currency" class="form-select" required>
                                 <option value="">请选择货币</option>
-                                <option value="CNY" selected>人民币 (CNY)</option>
-                                <option value="USD">美元 (USD)</option>
-                                <option value="HKD">港币 (HKD)</option>
-                                <option value="EUR">欧元 (EUR)</option>
-                                <option value="JPY">日元 (JPY)</option>
-                                <option value="GBP">英镑 (GBP)</option>
-                                <option value="AUD">澳元 (AUD)</option>
-                                <option value="CAD">加元 (CAD)</option>
                             </select>
                         </div>
                         
@@ -121,25 +115,6 @@
                             </label>
                             <select id="type" class="form-select" required>
                                 <option value="">请选择类型</option>
-                                <optgroup label="支出">
-                                    <option value="餐饮">餐饮</option>
-                                    <option value="交通">交通</option>
-                                    <option value="杂货">杂货</option>
-                                    <option value="软件">软件</option>
-                                    <option value="住房">住房</option>
-                                    <option value="娱乐">娱乐</option>
-                                    <option value="医疗">医疗</option>
-                                    <option value="教育">教育</option>
-                                    <option value="购物">购物</option>
-                                    <option value="其他支出">其他支出</option>
-                                </optgroup>
-                                <optgroup label="收入">
-                                    <option value="工资">工资</option>
-                                    <option value="奖金">奖金</option>
-                                    <option value="投资">投资</option>
-                                    <option value="兼职">兼职</option>
-                                    <option value="其他收入">其他收入</option>
-                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -253,206 +228,6 @@
         </footer>
     </div>
 
-    <script>
-        // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 标签页切换功能
-            const navLinks = document.querySelectorAll('.nav-link');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // 移除所有活动状态
-                    navLinks.forEach(nav => nav.parentElement.classList.remove('active'));
-                    tabContents.forEach(tab => tab.classList.remove('active'));
-                    
-                    // 添加当前活动状态
-                    this.parentElement.classList.add('active');
-                    const targetTab = this.getAttribute('data-tab');
-                    document.getElementById(targetTab).classList.add('active');
-                });
-            });
-            
-            // 设置默认日期为今天
-            const today = new Date();
-            const formattedDate = today.toISOString().split('T')[0];
-            document.getElementById('date').value = formattedDate;
-            document.getElementById('date').min = '2000-01-01';
-            document.getElementById('date').max = '2100-12-31';
-            
-            // 货币选择变化时更新货币符号
-            const currencySelect = document.getElementById('currency');
-            const currencySymbol = document.getElementById('currencySymbol');
-            
-            currencySelect.addEventListener('change', function() {
-                updateCurrencySymbol();
-            });
-            
-            // 初始化货币符号
-            updateCurrencySymbol();
-            
-            // 备注字数统计
-            const noteTextarea = document.getElementById('note');
-            const charCount = document.getElementById('charCount');
-            
-            noteTextarea.addEventListener('input', function() {
-                charCount.textContent = this.value.length;
-            });
-            
-            // 表单提交处理
-            const transactionForm = document.getElementById('transactionForm');
-            const formStatus = document.getElementById('formStatus');
-            
-            transactionForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                
-                // 获取表单数据
-                const formData = {
-                    date: document.getElementById('date').value,
-                    amount: parseFloat(document.getElementById('amount').value),
-                    currency: document.getElementById('currency').value,
-                    type: document.getElementById('type').value,
-                    note: document.getElementById('note').value
-                };
-                
-                // 验证表单
-                if (!formData.date) {
-                    showFormStatus('请选择日期', 'error');
-                    return;
-                }
-                
-                if (!formData.amount || formData.amount <= 0) {
-                    showFormStatus('请输入有效的金额（大于0）', 'error');
-                    return;
-                }
-                
-                if (!formData.currency) {
-                    showFormStatus('请选择货币', 'error');
-                    return;
-                }
-                
-                if (!formData.type) {
-                    showFormStatus('请选择类型', 'error');
-                    return;
-                }
-                
-                // 模拟表单提交成功
-                showFormStatus('交易记录添加成功！', 'success');
-                
-                // 模拟添加到预览区域
-                addToPreview(formData);
-                
-                // 3秒后重置表单
-                setTimeout(() => {
-                    transactionForm.reset();
-                    formStatus.className = 'status-message';
-                    formStatus.textContent = '';
-                    
-                    // 重置日期为今天
-                    document.getElementById('date').value = formattedDate;
-                    
-                    // 重置货币符号
-                    updateCurrencySymbol();
-                    
-                    // 重置字数统计
-                    charCount.textContent = 0;
-                }, 3000);
-            });
-            
-            // 表单重置处理
-            transactionForm.addEventListener('reset', function() {
-                formStatus.className = 'status-message';
-                formStatus.textContent = '';
-                
-                // 重置日期为今天
-                document.getElementById('date').value = formattedDate;
-                
-                // 重置货币符号
-                updateCurrencySymbol();
-                
-                // 重置字数统计
-                charCount.textContent = 0;
-            });
-        });
-        
-        // 更新货币符号
-        function updateCurrencySymbol() {
-            const currencySelect = document.getElementById('currency');
-            const currencySymbol = document.getElementById('currencySymbol');
-            const selectedCurrency = currencySelect.value;
-            
-            const currencySymbols = {
-                'CNY': '¥',
-                'USD': '$',
-                'HKD': 'HK$',
-                'EUR': '€',
-                'JPY': '¥',
-                'GBP': '£',
-                'AUD': 'A$',
-                'CAD': 'C$'
-            };
-            
-            currencySymbol.textContent = currencySymbols[selectedCurrency] || '¥';
-        }
-        
-        // 显示表单状态消息
-        function showFormStatus(message, type) {
-            const formStatus = document.getElementById('formStatus');
-            formStatus.textContent = message;
-            formStatus.className = `status-message ${type}`;
-            
-            // 滚动到状态消息
-            formStatus.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-        
-        // 模拟添加到预览区域
-        function addToPreview(transactionData) {
-            console.log('交易数据已保存:', transactionData);
-            // 在实际应用中，这里会将数据发送到后端保存
-            // 并更新预览区域显示最新的交易记录
-        }
-        
-        // 金额验证函数
-        function validateAmount(input) {
-            const value = input.value;
-            const amountHint = document.getElementById('amountHint');
-            
-            // 检查是否为有效数字
-            if (isNaN(value) || value === '') {
-                input.classList.add('invalid');
-                amountHint.textContent = '请输入有效的金额';
-                amountHint.style.color = '#d93025';
-                return;
-            }
-            
-            // 检查小数位数
-            const decimalIndex = value.indexOf('.');
-            if (decimalIndex !== -1) {
-                const decimalPlaces = value.length - decimalIndex - 1;
-                if (decimalPlaces > 4) {
-                    input.classList.add('invalid');
-                    amountHint.textContent = '小数位数不能超过4位';
-                    amountHint.style.color = '#d93025';
-                } else {
-                    input.classList.remove('invalid');
-                    amountHint.textContent = '最多支持四位小数';
-                    amountHint.style.color = '#5f6368';
-                }
-            } else {
-                input.classList.remove('invalid');
-                amountHint.textContent = '最多支持四位小数';
-                amountHint.style.color = '#5f6368';
-            }
-            
-            // 检查是否为负数
-            if (parseFloat(value) < 0) {
-                input.classList.add('invalid');
-                amountHint.textContent = '金额不能为负数';
-                amountHint.style.color = '#d93025';
-            }
-        }
-    </script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
