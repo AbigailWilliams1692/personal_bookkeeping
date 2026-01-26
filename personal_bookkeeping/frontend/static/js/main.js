@@ -200,15 +200,33 @@ function addToPreview(transactionData) {
     // 并更新预览区域显示最新的交易记录
 }
 
-// 金额验证函数
-function validateAmount(input) {
+// 金额验证函数 - 挂载到window对象使其全局可用
+window.validateAmount = function(input) {
     const value = input.value;
     const amountHint = document.getElementById("amountHint");
     
+    // 移除之前的验证状态
+    input.classList.remove("invalid");
+    
+    // 如果输入为空，不显示错误
+    if (value === "") {
+        amountHint.textContent = "最多支持四位小数";
+        amountHint.style.color = "#5f6368";
+        return;
+    }
+    
     // 检查是否为有效数字
-    if (isNaN(value) || value === "") {
+    if (isNaN(value)) {
         input.classList.add("invalid");
         amountHint.textContent = "请输入有效的金额";
+        amountHint.style.color = "#d93025";
+        return;
+    }
+    
+    // 检查是否为负数
+    if (parseFloat(value) < 0) {
+        input.classList.add("invalid");
+        amountHint.textContent = "金额不能为负数";
         amountHint.style.color = "#d93025";
         return;
     }
@@ -222,20 +240,11 @@ function validateAmount(input) {
             amountHint.textContent = "小数位数不能超过4位";
             amountHint.style.color = "#d93025";
         } else {
-            input.classList.remove("invalid");
             amountHint.textContent = "最多支持四位小数";
             amountHint.style.color = "#5f6368";
         }
     } else {
-        input.classList.remove("invalid");
         amountHint.textContent = "最多支持四位小数";
         amountHint.style.color = "#5f6368";
     }
-    
-    // 检查是否为负数
-    if (parseFloat(value) < 0) {
-        input.classList.add("invalid");
-        amountHint.textContent = "金额不能为负数";
-        amountHint.style.color = "#d93025";
-    }
-}
+};
