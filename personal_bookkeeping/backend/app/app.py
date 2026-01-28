@@ -20,7 +20,8 @@ from flask import Flask, render_template
 from flask_cors import CORS
 
 # Local Packages
-from api.transaction import *
+from api.transaction import transaction_bp
+
 
 ########################################################################
 # Function to initialize the Flask App
@@ -41,6 +42,9 @@ def create_app():
     # Set Configuration
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
     app.config["DEBUG"] = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
+    
+    # Register Blueprints
+    app.register_blueprint(transaction_bp, url_prefix="/api/transactions")
 
     # Register the root page route
     @app.route("/")

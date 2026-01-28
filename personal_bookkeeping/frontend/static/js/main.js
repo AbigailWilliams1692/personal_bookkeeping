@@ -1,6 +1,6 @@
 // 导入配置文件
 import { currencies } from "../config/currencies.js";
-import { transactionTypes } from "../config/types.js";
+import { transactionTypes } from "../config/transaction_types.js";
 
 // 页面加载完成后初始化
 document.addEventListener("DOMContentLoaded", function() {
