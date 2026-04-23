@@ -16,11 +16,11 @@
 import os
 
 # Third-party Packages
-from flask import Flask, render_template
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 
 # Local Packages
-from api.transaction import transaction_bp
+from .api.transaction import transaction_bp
 
 
 ########################################################################
@@ -30,11 +30,11 @@ def create_app():
     """
     Factory function to create and configure the Flask app.
     """
+    # Get the path to the Angular build output
+    static_folder = os.path.join(os.path.dirname(__file__), "..", "static", "browser")
+    
     # Create Flask app instance
-    app = Flask(__name__, 
-        template_folder="../../frontend/templates", 
-        static_folder="../../frontend/static"
-    )
+    app = Flask(__name__, static_folder=static_folder, static_url_path="")
 
     # Enable CORS for frontend communication
     CORS(app)  
@@ -46,11 +46,18 @@ def create_app():
     # Register Blueprints
     app.register_blueprint(transaction_bp, url_prefix="/api/transactions")
 
-    # Register the root page route
+    # Serve Angular app for root and all other routes (SPA routing)
     @app.route("/")
-    def index():
-        """Serve the main page."""
-        return render_template("index.html")
+    def serve_index():
+        """Serve the Angular index.html."""
+        return send_from_directory(app.static_folder, "index.html")
+
+    @app.route("/<path:path>")
+    def serve_static(path):
+        """Serve static files or fallback to index.html for SPA routing."""
+        if os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        return send_from_directory(app.static_folder, "index.html")
 
     @app.route("/health")
     def health():

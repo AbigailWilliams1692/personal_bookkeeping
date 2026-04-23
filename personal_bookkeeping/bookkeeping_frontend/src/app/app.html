@@ -1,0 +1,24 @@
+<div class="container">
+  <app-sidebar [activeTab]="activeTab()" (tabChange)="onTabChange($event)"></app-sidebar>
+
+  <main class="main-content">
+    @switch (activeTab()) {
+      @case ('add-record') {
+        <app-add-record></app-add-record>
+      }
+      @case ('view-records') {
+        <app-view-records></app-view-records>
+      }
+      @case ('statistics') {
+        <app-statistics></app-statistics>
+      }
+      @case ('settings') {
+        <app-settings></app-settings>
+      }
+    }
+  </main>
+
+  <footer>
+    <p>© 2026 个人财务记账App | Personal Bookkeeping App | All rights reserved.</p>
+  </footer>
+</div>

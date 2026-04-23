@@ -1,0 +1,29 @@
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h2 class="sidebar-title">功能菜单</h2>
+  </div>
+  <div class="user-section">
+    <label class="user-label" for="username">
+      <i class="fas fa-user"></i>
+      用户名
+    </label>
+    <input
+      type="text"
+      id="username"
+      class="user-input"
+      [value]="username()"
+      (input)="onUsernameChange($any($event.target).value)"
+      placeholder="请输入用户名"
+    />
+  </div>
+  <ul class="nav-menu">
+    @for (item of navItems; track item.id) {
+      <li class="nav-item" [class.active]="activeTab() === item.id">
+        <a href="#" class="nav-link" (click)="onTabClick(item.id); $event.preventDefault()">
+          <i class="fas" [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>

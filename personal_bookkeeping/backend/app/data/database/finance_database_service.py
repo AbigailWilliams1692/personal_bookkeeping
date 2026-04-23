@@ -47,12 +47,12 @@ class Finance_Database_Service(object):
        # Initialize the attributes
        self._db_file_path = db_file_path
 
-       # Initialize the database provider
-       ## Validate whether the database file exists
-       if self.validate_db_file_path(db_file_path=db_file_path):
-           self._db_provider = SQLite3_DataProvider(db_file_path=db_file_path)
-       else:
+       # Validate whether the database file exists
+       if not self.validate_db_file_path(db_file_path=db_file_path):
            raise ValueError("Invalid database file path.")
+       
+       # Ensure the bookkeeping table exists
+       self.create_bookkeeping_table()
 
     ###################################################################
     # Getter & Setter Methods
@@ -74,16 +74,16 @@ class Finance_Database_Service(object):
         :type db_file_path: str
         """
         self._db_file_path = db_file_path
-        self._db_provider = SQLite3_DataProvider(db_file_path=db_file_path)
 
     def get_db_provider(self) -> SQLite3_DataProvider:
         """
-        Getter method for the database provider.
+        Creates and returns a new database provider instance.
+        A new instance is created each time to avoid SQLite threading issues.
 
-        :return: The database provider instance.
+        :return: A new database provider instance.
         :rtype: SQLite3_DataProvider
         """
-        return self._db_provider
+        return SQLite3_DataProvider(db_file_path=self._db_file_path)
 
     ###################################################################
     # Core Methods
@@ -102,6 +102,7 @@ class Finance_Database_Service(object):
                 transaction_date DATE NOT NULL,
                 amount FLOAT NOT NULL,
                 currency TEXT NOT NULL,
+                transaction_type TEXT NOT NULL,
                 transaction_category TEXT NOT NULL,
                 site TEXT,
                 comment TEXT,
@@ -114,28 +115,45 @@ class Finance_Database_Service(object):
 
         return response
 
-    def add_a_transaction_record(self, transaction_record: Dict) -> None:
+    def add_a_transaction_record(self, transaction_record: Dict) -> Dict:
         """
         Adds a single transaction record to the database.
 
         :param transaction_record: Dict: A single transaction record in Dict format.
-        :return: None
+        :return: Dict: The inserted transaction record with ID.
         """
+        # Get a database connection
+        db_provider = self.get_db_provider()
+        
         # Formulate the SQL
         sql = """
             INSERT INTO bookkeeping (
-                user, transaction_date, amount, currency, transaction_category, site, comment
+                user, transaction_date, amount, currency, transaction_type, transaction_category, site, comment
             ) VALUES (
-                :user, :transaction_date, :amount, :currency, :transaction_category, :site, :comment
+                :user, :transaction_date, :amount, :currency, :transaction_type, :transaction_category, :site, :comment
             )
         """
 
         # Execute the SQL
-        response = self.get_db_provider().execute(sql=sql, params=transaction_record)
+        response = db_provider.execute(sql=sql, params=transaction_record)
 
         # Verify the response is an empty list
         if response:
             raise ValueError(f"Failed to add transaction record. Response: {response}")
+        
+        # Get the last inserted row ID and return the full record
+        last_id_sql = "SELECT last_insert_rowid() as id"
+        last_id_result = db_provider.execute(sql=last_id_sql)
+        
+        if last_id_result and len(last_id_result) > 0:
+            inserted_id = last_id_result[0]['id']
+            # Return the record with the ID
+            return {
+                'id': inserted_id,
+                **transaction_record
+            }
+        
+        return transaction_record
 
 
     def add_transaction_records(self, transaction_records: List[Dict]) -> List:
@@ -147,9 +165,9 @@ class Finance_Database_Service(object):
         """
         # Formulate the SQL
         sql = """
-            INSERT INTO bookkeeping (user, transaction_date, amount, currency, transaction_category, site, comment)
+            INSERT INTO bookkeeping (user, transaction_date, amount, currency, transaction_type, transaction_category, site, comment)
             VALUES (
-                :user, :transaction_date, :amount, :currency, :transaction_category, :site, :comment
+                :user, :transaction_date, :amount, :currency, :transaction_type, :transaction_category, :site, :comment
             )
         """
 
@@ -172,6 +190,23 @@ class Finance_Database_Service(object):
         # Execute the SQL
         response = self.get_db_provider().execute(sql=sql)
         return response
+
+    def query_transaction_record_by_id(self, transaction_id: int) -> Optional[sqlite3.Row]:
+        """
+        Queries a single transaction record from the database by its ID.
+
+        :param transaction_id: int: The ID of the transaction record to query.
+        :return: Optional[sqlite3.Row]: The transaction record if found, None otherwise.
+        """
+        # Formulate the SQL
+        sql = """
+            SELECT * FROM bookkeeping
+            WHERE id = ?
+        """
+
+        # Execute the SQL
+        response = self.get_db_provider().execute(sql=sql, params=(transaction_id,))
+        return response[0] if response else None
 
     def query_latest_transaction_records(self, number: int) -> List[sqlite3.Row]:
         """
@@ -196,8 +231,9 @@ class Finance_Database_Service(object):
         transaction_ids: Optional[List[int]] = None, 
         transaction_date_start: Optional[datetime.date] = None,
         transaction_date_end: Optional[datetime.date] = None,
+        transaction_types: Optional[List[str]] = None,
         transaction_categories: Optional[List[str]] = None,
-        site: Optional[str] = None,
+        transaction_sites: Optional[List[str]] = None,
         comment: Optional[str] = None,
     ) -> List[sqlite3.Row]:
         """
@@ -206,14 +242,15 @@ class Finance_Database_Service(object):
         :param transaction_ids: List[int]: A list of transaction IDs to query.
         :param transaction_date_start: datetime.date: The start date of the transaction records to query.
         :param transaction_date_end: datetime.date: The end date of the transaction records to query.
+        :param transaction_types: List[str]: The type of the transaction records to query.
         :param transaction_categories: List[str]: The category of the transaction records to query.
-        :param site: str: The site of the transaction records to query.
+        :param transaction_sites: List[str]: The sites of the transaction records to query.
         :param comment: str: The comment of the transaction records to query.
         :return: List: A list of transaction records.
         """
         # Validate the input parameters
         ## Check that not all of the parameters are None
-        if not any([transaction_ids, transaction_date_start, transaction_date_end, transaction_categories, site, comment]):
+        if not any([transaction_ids, transaction_date_start, transaction_date_end, transaction_categories, transaction_sites, comment]):
             raise ValueError("At least one parameter must be provided for the query.")
         ## Verify the transaction_date_start and transaction_date_end are valid dates
         if transaction_date_start and transaction_date_end:
@@ -239,19 +276,23 @@ class Finance_Database_Service(object):
             sql += "transaction_date <= '{}' AND ".format(
                 transaction_date_end.strftime("%Y-%m-%d")
             )
+        if transaction_types:
+            sql += "transaction_type IN ({}) AND ".format(
+                self.get_db_provider().stringify_a_list_of_items_with_apostrophe(item_list=transaction_types)
+            )
         if transaction_categories:
             sql += "transaction_category IN ({}) AND ".format(
                 self.get_db_provider().stringify_a_list_of_items_with_apostrophe(item_list=transaction_categories)
             )
-        if site:
-            sql += "site = '{}' AND ".format(site)
+        if transaction_sites:
+            sql += "site IN ({}) AND ".format(
+                self.get_db_provider().stringify_a_list_of_items_with_apostrophe(item_list=transaction_sites)
+            )
         if comment:
             sql += "comment LIKE '%{}%' AND ".format(comment)
 
         # Remove trailing ' AND '
         sql = sql.rstrip(" AND ")
-        
-        print(sql)
 
         # Execute the SQL
         response = self.get_db_provider().execute(sql=sql)
@@ -299,8 +340,9 @@ class Finance_Database_Service(object):
         transaction_ids: Optional[List[int]] = None, 
         transaction_date_start: Optional[datetime.date] = None,
         transaction_date_end: Optional[datetime.date] = None,
+        transaction_types: Optional[List[str]] = None,
         transaction_categories: Optional[List[str]] = None,
-        site: Optional[str] = None,
+        transaction_sites: Optional[List[str]] = None,
         comment: Optional[str] = None,
     ) -> List:
         """
@@ -309,14 +351,15 @@ class Finance_Database_Service(object):
         :param transaction_ids: List[int]: A list of transaction IDs to query.
         :param transaction_date_start: datetime.date: The start date of the transaction records to query.
         :param transaction_date_end: datetime.date: The end date of the transaction records to query.
+        :param transaction_types: List[str]: The type of the transaction records to query.
         :param transaction_categories: List[str]: The category of the transaction records to query.
-        :param site: str: The site of the transaction records to query.
+        :param transaction_sites: List[str]: The sites of the transaction records to query.
         :param comment: str: The comment of the transaction records to query.
         :return: List: A list of transaction records.
         """
         # Validate the input parameters
         ## Check that not all of the parameters are None
-        if not any([transaction_ids, transaction_date_start, transaction_date_end, transaction_categories, site, comment]):
+        if not any([transaction_ids, transaction_date_start, transaction_date_end, transaction_categories, transaction_sites, comment]):
             raise ValueError("At least one parameter must be provided for the query.")
         ## Verify the transaction_date_start and transaction_date_end are valid dates
         if transaction_date_start and transaction_date_end:
@@ -342,12 +385,18 @@ class Finance_Database_Service(object):
             sql += "transaction_date <= '{}' AND ".format(
                 transaction_date_end.strftime("%Y-%m-%d")
             )
+        if transaction_types:
+            sql += "transaction_type IN ({}) AND ".format(
+                self.get_db_provider().stringify_a_list_of_items_with_apostrophe(item_list=transaction_types)
+            )
         if transaction_categories:
             sql += "transaction_category IN ({}) AND ".format(
                 self.get_db_provider().stringify_a_list_of_items_with_apostrophe(item_list=transaction_categories)
             )
-        if site:
-            sql += "site = '{}' AND ".format(site)
+        if transaction_sites:
+            sql += "site IN ({}) AND ".format(
+                self.get_db_provider().stringify_a_list_of_items_with_apostrophe(item_list=transaction_sites)
+            )
         if comment:
             sql += "comment LIKE '%{}%' AND ".format(comment)
 
@@ -374,7 +423,8 @@ class Finance_Database_Service(object):
                 user = :user, 
                 transaction_date = :transaction_date, 
                 amount = :amount, 
-                currency = :currency, 
+                currency = :currency,
+                transaction_type = :transaction_type,
                 transaction_category = :transaction_category, 
                 site = :site, 
                 comment = :comment,
@@ -386,6 +436,16 @@ class Finance_Database_Service(object):
         response = self.get_db_provider().execute(sql=sql, params=transaction_record)
 
         return response
+
+    def update_transaction_records(self, transaction_records: Dict[int, Dict]) -> List:
+        """
+        Updates multiple transaction records in the database.
+
+        :param transaction_records: Dict[int, Dict]: A dictionary of transaction records to update.
+        :return: None
+        """
+        for transaction_id, transaction_record in transaction_records.items():
+            self.update_transaction_record(transaction_id=transaction_id, transaction_record=transaction_record)
 
     ###################################################################
     # Utility Methods

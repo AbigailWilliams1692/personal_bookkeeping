@@ -1,0 +1,126 @@
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e8eaed;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  position: fixed;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+  z-index: 100;
+  top: 0;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.sidebar-title {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #202124;
+  margin: 0;
+}
+
+.user-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8eaed;
+  background-color: #f8f9fa;
+}
+
+.user-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #5f6368;
+  margin-bottom: 8px;
+}
+
+.user-label i {
+  color: #1a73e8;
+}
+
+.user-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #202124;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.user-input:hover {
+  border-color: #80868b;
+}
+
+.user-input::placeholder {
+  color: #9aa0a6;
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.nav-item:last-child {
+  border-bottom: none;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: #5f6368;
+  font-weight: 400;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  gap: 12px;
+}
+
+.nav-link:hover {
+  background-color: #f8f9fa;
+  color: #202124;
+}
+
+.nav-item.active .nav-link {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  font-weight: 500;
+  border-left: 3px solid #1a73e8;
+}
+
+.nav-link i {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e8eaed;
+  }
+
+  .nav-link {
+    padding: 12px 20px;
+  }
+}

@@ -1,0 +1,551 @@
+<div class="tab-content active">
+  <header>
+    <h1 class="app-title">个人财务记账App</h1>
+    <p class="app-subtitle">轻松记录每一笔收支，掌握您的财务状况</p>
+  </header>
+
+  <div class="main-content-inner">
+    <!-- 主表单卡片 -->
+    <div class="form-card">
+      <h2 class="form-title">
+        <i class="fas fa-plus-circle"></i>
+        添加新记录
+      </h2>
+
+      <div class="transaction-type-selector">
+        <label class="form-label required">
+          <i class="fas fa-exchange-alt"></i>
+          交易类型
+        </label>
+        <div class="type-toggle">
+          @for (typeOpt of transactionTypeOptions; track typeOpt) {
+            <input 
+              type="radio" 
+              [id]="'type' + typeOpt" 
+              name="transactionType" 
+              [value]="typeOpt"
+              [checked]="transactionType() === typeOpt"
+              (change)="transactionType.set(typeOpt); onTransactionTypeChange()"
+            >
+            <label 
+              [for]="'type' + typeOpt" 
+              class="type-btn"
+              [class.expense-btn]="typeOpt === '支出'"
+              [class.income-btn]="typeOpt === '收入'"
+            >
+              <i [class]="typeOpt === '支出' ? 'fas fa-minus-circle' : 'fas fa-plus-circle'"></i>
+              {{ typeOpt }}
+            </label>
+          }
+        </div>
+      </div>
+
+      <form class="transaction-form" (ngSubmit)="onSubmit()" #transactionForm="ngForm">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label required" for="date">
+              <i class="far fa-calendar-alt"></i>
+              日期
+            </label>
+            <input
+              type="date"
+              id="date"
+              class="form-input"
+              [ngModel]="date()"
+              (ngModelChange)="date.set($event)"
+              name="date"
+              required
+              min="2000-01-01"
+              max="2100-12-31"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label required" for="amount">
+              <i class="fas fa-money-bill-wave"></i>
+              金额
+            </label>
+            <div class="amount-container">
+              <span class="currency-symbol">{{ currencySymbol() }}</span>
+              <input
+                type="text"
+                inputmode="decimal"
+                id="amount"
+                class="form-input amount-input"
+                [class.invalid]="isAmountInvalid()"
+                [value]="amount()"
+                (input)="onAmountInput($any($event.target))"
+                (blur)="onAmountBlur($any($event.target))"
+                name="amount"
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div class="input-hint" [style.color]="amountHintColor()">
+              {{ amountHint() }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label required" for="currency">
+              <i class="fas fa-globe"></i>
+              货币
+            </label>
+            <select
+              id="currency"
+              class="form-select"
+              [ngModel]="currency()"
+              (ngModelChange)="onCurrencyChange($event)"
+              name="currency"
+              required
+            >
+              <option value="">请选择货币</option>
+              @for (curr of currencies; track curr.value) {
+                <option [value]="curr.value">{{ curr.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label required" for="category">
+              <i class="fas fa-tag"></i>
+              类别
+            </label>
+            <select
+              id="category"
+              class="form-select"
+              [ngModel]="category()"
+              (ngModelChange)="category.set($event)"
+              name="category"
+              required
+            >
+              <option value="">请选择类别</option>
+              @for (opt of filteredCategories(); track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="location">
+            <i class="fas fa-map-marker-alt"></i>
+            去向/来源
+          </label>
+          <input
+            type="text"
+            id="location"
+            class="form-input"
+            [ngModel]="location()"
+            (ngModelChange)="location.set($event)"
+            name="location"
+            placeholder="请输入购买地点或收入来源（可选）"
+            maxlength="100"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="note">
+            <i class="far fa-sticky-note"></i>
+            备注
+          </label>
+          <textarea
+            id="note"
+            class="form-textarea"
+            [ngModel]="note()"
+            (ngModelChange)="note.set($event)"
+            name="note"
+            placeholder="可在此添加交易备注信息（可选）"
+            maxlength="500"
+          ></textarea>
+          <div class="char-counter">
+            <span>{{ charCount() }}</span>/500
+          </div>
+        </div>
+
+        @if (statusMessage()) {
+          <div class="status-message" [class.success]="statusType() === 'success'" [class.error]="statusType() === 'error'">
+            {{ statusMessage() }}
+          </div>
+        }
+
+        <div class="form-actions">
+          <input 
+            type="file" 
+            #csvFileInput 
+            accept=".csv" 
+            style="display: none;" 
+            (change)="onCsvFileSelected($event)"
+          />
+          <button type="button" class="btn btn-upload" (click)="csvFileInput.click()">
+            <i class="fas fa-file-csv"></i>
+            批量导入
+          </button>
+          <div class="form-actions-right">
+            <button type="button" class="btn btn-secondary" (click)="resetForm()">
+              <i class="fas fa-redo"></i>
+              重置表单
+            </button>
+            <button type="button" class="btn btn-primary" (click)="onSubmit()">
+              <i class="fas fa-check-circle"></i>
+              确认添加
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- 预览区域 -->
+    <div class="preview-section">
+      <div class="preview-header">
+        <h3 class="preview-title">
+          <i class="fas fa-history"></i>
+          交易记录
+        </h3>
+        <div class="date-range-filter">
+          <div class="date-input-group">
+            <label for="queryStartDate">开始</label>
+            <input
+              type="date"
+              id="queryStartDate"
+              class="date-filter-input"
+              [value]="queryStartDate()"
+              (change)="onQueryStartDateChange($any($event.target).value)"
+            />
+          </div>
+          <span class="date-separator">至</span>
+          <div class="date-input-group">
+            <label for="queryEndDate">结束</label>
+            <input
+              type="date"
+              id="queryEndDate"
+              class="date-filter-input"
+              [value]="queryEndDate()"
+              (change)="onQueryEndDateChange($any($event.target).value)"
+            />
+          </div>
+          <div class="sort-buttons">
+            <button 
+              type="button" 
+              class="sort-btn" 
+              (click)="toggleSortBy()"
+              [title]="sortBy() === 'id' ? '当前按录入顺序排序，点击切换为按日期排序' : '当前按日期排序，点击切换为按录入顺序排序'"
+            >
+              <i class="fas" [class.fa-hashtag]="sortBy() === 'id'" [class.fa-calendar]="sortBy() === 'date'"></i>
+              <span>{{ sortBy() === 'id' ? '录入序' : '日期' }}</span>
+            </button>
+            <button 
+              type="button" 
+              class="sort-btn" 
+              (click)="toggleSortOrder()"
+              [title]="sortOrder() === 'desc' ? '当前降序排列，点击切换为升序' : '当前升序排列，点击切换为降序'"
+            >
+              <i class="fas" [class.fa-sort-amount-down]="sortOrder() === 'desc'" [class.fa-sort-amount-up]="sortOrder() === 'asc'"></i>
+              <span>{{ sortOrder() === 'desc' ? '降序' : '升序' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      @if (isLoadingTransactions()) {
+        <div class="preview-placeholder">
+          <i class="fas fa-spinner fa-spin fa-3x placeholder-icon"></i>
+          <p>加载中...</p>
+        </div>
+      } @else if (sortedTransactions().length === 0) {
+        <div class="preview-placeholder">
+          <i class="fas fa-receipt fa-3x placeholder-icon"></i>
+          <p>暂无交易记录</p>
+          <p class="placeholder-hint">该日期范围内没有交易记录</p>
+        </div>
+      } @else {
+        <div class="recent-records">
+          @for (txn of sortedTransactions(); track txn.id) {
+            <div class="record-item">
+              <div class="record-main">
+                <div class="record-info">
+                  <div class="record-header">
+                    <span class="record-type">{{ txn.type }} - {{ txn.category }}</span>
+                    <span class="record-amount">{{ formatAmount(txn.amount, txn.currency) }}</span>
+                  </div>
+                  <div class="record-meta">
+                    <span class="record-date">{{ txn.date }}</span>
+                    <span class="record-user">{{ txn.user }}</span>
+                  </div>
+                </div>
+              </div>
+              @if (txn.location || txn.note) {
+                <div class="record-details">
+                  @if (txn.location) {
+                    <div class="record-detail-item">
+                      <i class="fas fa-map-marker-alt"></i>
+                      <span>{{ txn.location }}</span>
+                    </div>
+                  }
+                  @if (txn.note) {
+                    <div class="record-detail-item">
+                      <i class="fas fa-sticky-note"></i>
+                      <span>{{ txn.note }}</span>
+                    </div>
+                  }
+                </div>
+              }
+              <div class="record-actions">
+                <button class="action-btn edit-btn" (click)="openEditModal(txn)" title="编辑">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete-btn" (click)="openDeleteModal(txn)" title="删除">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+      
+      <!-- Export Button -->
+      @if (sortedTransactions().length > 0) {
+        <div class="export-section">
+          <button type="button" class="btn btn-export" (click)="exportToCsv()">
+            <i class="fas fa-download"></i>
+            导出CSV
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+@if (showEditModal()) {
+  <div class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fas fa-edit"></i>
+          修改记录
+        </h2>
+        <button class="modal-close-btn" (click)="closeEditModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="transaction-type-selector">
+          <label class="form-label required">
+            <i class="fas fa-exchange-alt"></i>
+            交易类型
+          </label>
+          <div class="type-toggle">
+            @for (typeOpt of transactionTypeOptions; track typeOpt) {
+              <input 
+                type="radio" 
+                [id]="'editType' + typeOpt" 
+                name="editTransactionType" 
+                [value]="typeOpt"
+                [checked]="editTransactionType() === typeOpt"
+                (change)="editTransactionType.set(typeOpt); onEditTransactionTypeChange()"
+              >
+              <label 
+                [for]="'editType' + typeOpt" 
+                class="type-btn"
+                [class.expense-btn]="typeOpt === '支出'"
+                [class.income-btn]="typeOpt === '收入'"
+              >
+                <i [class]="typeOpt === '支出' ? 'fas fa-minus-circle' : 'fas fa-plus-circle'"></i>
+                {{ typeOpt }}
+              </label>
+            }
+          </div>
+        </div>
+
+        <form class="transaction-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label required" for="editDate">
+                <i class="far fa-calendar-alt"></i>
+                日期
+              </label>
+              <input
+                type="date"
+                id="editDate"
+                class="form-input"
+                [ngModel]="editDate()"
+                (ngModelChange)="editDate.set($event)"
+                name="editDate"
+                required
+                min="2000-01-01"
+                max="2100-12-31"
+              />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label required" for="editAmount">
+                <i class="fas fa-money-bill-wave"></i>
+                金额
+              </label>
+              <div class="amount-container">
+                <span class="currency-symbol">{{ editCurrencySymbol() }}</span>
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  id="editAmount"
+                  class="form-input amount-input"
+                  [class.invalid]="isEditAmountInvalid()"
+                  [value]="editAmount()"
+                  (input)="onEditAmountInput($any($event.target))"
+                  (blur)="onEditAmountBlur($any($event.target))"
+                  name="editAmount"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div class="input-hint" [style.color]="editAmountHintColor()">
+                {{ editAmountHint() }}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="form-label required" for="editCurrency">
+                <i class="fas fa-globe"></i>
+                货币
+              </label>
+              <select
+                id="editCurrency"
+                class="form-select"
+                [ngModel]="editCurrency()"
+                (ngModelChange)="onEditCurrencyChange($event)"
+                name="editCurrency"
+                required
+              >
+                <option value="">请选择货币</option>
+                @for (curr of currencies; track curr.value) {
+                  <option [value]="curr.value">{{ curr.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label required" for="editCategory">
+                <i class="fas fa-tag"></i>
+                类别
+              </label>
+              <select
+                id="editCategory"
+                class="form-select"
+                [ngModel]="editCategory()"
+                (ngModelChange)="editCategory.set($event)"
+                name="editCategory"
+                required
+              >
+                <option value="">请选择类别</option>
+                @for (opt of editFilteredCategories(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="editLocation">
+              <i class="fas fa-map-marker-alt"></i>
+              去向/来源
+            </label>
+            <input
+              type="text"
+              id="editLocation"
+              class="form-input"
+              [ngModel]="editLocation()"
+              (ngModelChange)="editLocation.set($event)"
+              name="editLocation"
+              placeholder="请输入购买地点或收入来源（可选）"
+              maxlength="100"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="editNote">
+              <i class="far fa-sticky-note"></i>
+              备注
+            </label>
+            <textarea
+              id="editNote"
+              class="form-textarea"
+              [ngModel]="editNote()"
+              (ngModelChange)="editNote.set($event)"
+              name="editNote"
+              placeholder="可在此添加交易备注信息（可选）"
+              maxlength="500"
+            ></textarea>
+            <div class="char-counter">
+              <span>{{ editCharCount() }}</span>/500
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">
+          <i class="fas fa-times"></i>
+          取消
+        </button>
+        <button type="button" class="btn btn-primary" (click)="submitEdit()">
+          <i class="fas fa-check-circle"></i>
+          确认修改
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal()) {
+  <div class="modal-overlay" (click)="closeDeleteModal()">
+    <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title delete-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          确认删除
+        </h2>
+        <button class="modal-close-btn" (click)="closeDeleteModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body delete-body">
+        <p class="delete-message">确定要删除这条交易记录吗？</p>
+        @if (deletingTransaction()) {
+          <div class="delete-preview">
+            <div class="delete-preview-item">
+              <span class="delete-label">类型:</span>
+              <span>{{ deletingTransaction()?.type }} - {{ deletingTransaction()?.category }}</span>
+            </div>
+            <div class="delete-preview-item">
+              <span class="delete-label">金额:</span>
+              <span>{{ formatAmount(deletingTransaction()?.amount || 0, deletingTransaction()?.currency || 'CNY') }}</span>
+            </div>
+            <div class="delete-preview-item">
+              <span class="delete-label">日期:</span>
+              <span>{{ deletingTransaction()?.date }}</span>
+            </div>
+          </div>
+        }
+        <p class="delete-warning">此操作不可撤销！</p>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()">
+          <i class="fas fa-times"></i>
+          取消
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          <i class="fas fa-trash-alt"></i>
+          确认删除
+        </button>
+      </div>
+    </div>
+  </div>
+}

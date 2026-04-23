@@ -1,0 +1,54 @@
+<div class="tab-content">
+  <header>
+    <h1 class="app-title">查看所有记录</h1>
+    <p class="app-subtitle">浏览和管理您的所有财务记录</p>
+  </header>
+  <div class="form-card">
+    <h2 class="form-title">
+      <i class="fas fa-list"></i>
+      交易记录列表
+    </h2>
+    @if (transactions().length === 0) {
+      <div class="records-placeholder">
+        <i class="fas fa-receipt fa-3x"></i>
+        <p>暂无交易记录</p>
+        <p class="placeholder-hint">添加的交易记录将显示在此处</p>
+      </div>
+    } @else {
+      <div class="records-list">
+        @for (txn of transactions(); track txn.id) {
+          <div class="record-card">
+            <div class="record-header">
+              <span class="record-type">{{ txn.type }}</span>
+              <span class="record-amount">{{ formatAmount(txn.amount, txn.currency) }}</span>
+            </div>
+            <div class="record-details">
+              <div class="record-detail">
+                <i class="far fa-calendar-alt"></i>
+                <span>{{ txn.date }}</span>
+              </div>
+              @if (txn.location) {
+                <div class="record-detail">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>{{ txn.location }}</span>
+                </div>
+              }
+              @if (txn.note) {
+                <div class="record-detail">
+                  <i class="far fa-sticky-note"></i>
+                  <span>{{ txn.note }}</span>
+                </div>
+              }
+            </div>
+            <div class="record-actions">
+              <button class="btn-delete" (click)="deleteTransaction(txn.id!)">
+                <i class="fas fa-trash-alt"></i>
+                删除
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
